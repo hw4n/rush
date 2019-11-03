@@ -1,0 +1,20 @@
+h3 {
+  text-transform: uppercase;
+}
+
+#content {
+  padding: 35%;
+  text-align: center;
+  color: white;
+}
+
+body {
+  background: url('https://images.unsplash.com/photo-1520092352425-9699926a9b0b');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+html {
+  height: 100%;
+}
