@@ -1,0 +1,24 @@
+{
+  "name": "rush",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hw4n/rush.git"
+  },
+  "author": "TEAM RUSH",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hw4n/rush/issues"
+  },
+  "homepage": "https://github.com/hw4n/rush#readme",
+  "dependencies": {
+    "ejs": "^2.7.3",
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}
