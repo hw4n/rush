@@ -1,17 +1,25 @@
 <% include partials/header %>
 
-<div class="row">
-  <div class="my-3 border col-md-3">
-    <h4 class="pl-2 pt-2"><strong>접속중인 유저</strong></h4>
-    <ul>
-      <li>홍길동</li>
-    </ul>
-  </div>
-  <div class="my-3 border col-md-9">
-    <div id="chat" class="py-3">
+<div class="container-fluid">
+  <div id="mainRow" class="row">
+    <div class="border col-md-3">
+      <div>
+        <h4 class="pl-2 pt-4"><strong>접속중인 유저</strong></h4>
+        <ul id="userlist">
+        </ul>
+      </div>
+      <div>
+        <h4 class="pl-2 pt-4"><strong>대기열</strong></h4>
+        <ul>
+          <li>Lorem ipsum - dolor sit</li>
+        </ul>
+      </div>
     </div>
-    <input type="text" id="chatInput">
-    <button onclick="send()">전송하기</button>
+    <div class="px-0 border col-md-9">
+      <div id="chat">
+      </div>
+      <input class="fixed-bottom form-control" type="text" id="chatInput" placeholder="메시지를 입력하세요!">
+    </div>
   </div>
 </div>
 

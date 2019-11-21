@@ -4,8 +4,16 @@
   font-family: 'Nanum Gothic', sans-serif;
 }
 
+#mainRow {
+  height: calc(100vh - 72px);
+}
+
 ul {
   list-style: none;
+}
+
+#chat {
+  line-height: 2.5em;
 }
 
 .system {
@@ -15,18 +23,23 @@ ul {
 }
 
 .connect {
-  background-color: rgba(0, 255, 0, 0.5);
+  background-color: rgba(0, 255, 0, 0.45);
 }
 
 .disconnect {
-  background-color: rgba(255, 0, 0, 0.5);
-}
-
-.users {
-  background-color: rgba(0, 0, 255, 0.5);
+  background-color: rgba(255, 0, 0, 0.45);
 }
 
 .client {
-  background-color: rgba(0, 140, 255, 0.5);
+  padding-left: 5px;
+  background-color: rgba(0, 140, 255, 0.45);
+}
+
+.client:nth-child(even) {
+  background-color: rgba(0, 120, 255, 0.45);
+}
+
+.local {
   text-align: right;
+  padding-right: 5px;
 }

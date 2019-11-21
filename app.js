@@ -15,11 +15,15 @@ app.get("/chat", (req, res) => {
   res.render("chat");
 });
 
+var allUsers = [];
+
 io.sockets.on("connection", (socket) => {
   socket.on("newUser", (name) => {
     console.log(`[+] User(${name}) connected`);
     socket.name = name;
     io.sockets.emit("update", {type: "connect", name: "SERVER", message: name + " 접속"});
+    allUsers.push(socket.name);
+    io.sockets.emit("userUpdate", allUsers);
   });
 
   socket.on("message", (data) => {
@@ -31,6 +35,9 @@ io.sockets.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`[-] User(${socket.name}) disconnected`);
     socket.broadcast.emit("update", {type: "disconnect", name: "SERVER", message: socket.name + " 접속 종료"});
+    var userIdx = allUsers.indexOf(socket.name);
+    allUsers.splice(userIdx, 1);
+    io.sockets.emit("userUpdate", allUsers);
   });
   
 });
