@@ -4,16 +4,17 @@
   <div id="mainRow" class="row">
     <div class="border col-md-3">
       <div>
+        <h4 class="pl-2 pt-4"><strong>재생 중</strong></h4>
+        <ul>
+          <li id="nowPlaying"></li>
+        </ul>
+      </div>
+      <div>
         <h4 class="pl-2 pt-4"><strong>접속중인 유저</strong></h4>
         <ul id="userlist">
         </ul>
       </div>
-      <div>
-        <h4 class="pl-2 pt-4"><strong>대기열</strong></h4>
-        <ul>
-          <li>Lorem ipsum - dolor sit</li>
-        </ul>
-      </div>
+      <video id="streamPlayer" autoplay controls style="height: 40px; width: 100%;"></video>
     </div>
     <div class="px-0 border col-md-9">
       <div id="chat">

@@ -17,8 +17,10 @@
   },
   "homepage": "https://github.com/hw4n/rush#readme",
   "dependencies": {
+    "@isolution/youtube-audio-stream": "^1.3.0",
     "ejs": "^2.7.3",
     "express": "^4.17.1",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.3.0",
+    "youtube-node": "^1.3.3"
   }
 }

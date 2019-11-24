@@ -2,6 +2,8 @@ var socket = io();
 var chat = document.querySelector("#chat");
 var chatInput = document.querySelector("#chatInput");
 var userlist = document.querySelector("#userlist");
+var player = document.querySelector("#streamPlayer");
+var nowPlaying = document.querySelector("#nowPlaying");
 
 socket.on("connect", () => {
   var name = Math.random().toString(36).substr(2, 7);
@@ -10,12 +12,19 @@ socket.on("connect", () => {
 
 socket.on("update", (data) => {
   var message = document.createElement("div");
-  var text = document.createTextNode(`${data.name}: ${data.message}\n`);
+  var text;
+  if (data.name !== "SERVER")
+    text = document.createTextNode(`${data.name} : ${data.message}\n`);
+  else
+    text = document.createTextNode(`${data.message}\n`);
   var msgClass = "";
 
   switch (data.type) {
     case "message":
       msgClass = ["client"];
+      break;
+    case "server":
+      msgClass = ["server"];
       break;
     case "connect":
       msgClass = ["system", "connect"];
@@ -43,6 +52,11 @@ socket.on("userUpdate", (allUsers) => {
   });
 })
 
+socket.on("playMusic", (data) => {
+  player.setAttribute("src", `/music/${data.videoId}`);
+  nowPlaying.innerText = data.title;
+});
+
 function send() {
   if (!chatInput.value.length) {
     return;
@@ -51,9 +65,9 @@ function send() {
   socket.emit("message", {type: "message", message: chatInput.value});
 
   var message = document.createElement("div");
-  var text = document.createTextNode(chatInput.value);
+  var text = document.createTextNode("당신 : " + chatInput.value);
 
-  message.classList.add("client", "local");
+  message.classList.add("client");
   message.appendChild(text);
   chat.appendChild(message);
   
@@ -73,3 +87,6 @@ function checkAndRemoveChat() {
     chat.removeChild(chat.childNodes[0]);
   }
 }
+
+player.controls = false;
+player.volume = 0.5;

@@ -30,6 +30,11 @@ ul {
   background-color: rgba(255, 0, 0, 0.45);
 }
 
+.server {
+  padding-left: 5px;
+  background-color: rgba(255, 150, 0, 0.45);
+}
+
 .client {
   padding-left: 5px;
   background-color: rgba(0, 140, 255, 0.45);
@@ -37,9 +42,4 @@ ul {
 
 .client:nth-child(even) {
   background-color: rgba(0, 120, 255, 0.45);
-}
-
-.local {
-  text-align: right;
-  padding-right: 5px;
 }
