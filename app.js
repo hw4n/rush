@@ -21,6 +21,12 @@ app.get("/chat", (req, res) => {
   res.render("chat");
 });
 
+var streamData = {
+  streamStarted: "",
+  lastPlaying: "",
+  title: ""
+};
+
 app.get("/music/:videoId", (req, res) => {
   const requestUrl = `http://youtube.com/watch?v=${req.params.videoId}`;
   const streamPromise = youtubeAudioStream(requestUrl);
@@ -30,7 +36,7 @@ app.get("/music/:videoId", (req, res) => {
         console.log(err);
         io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 재생할 수 없는 영상입니다.`});
       });
-      stream.pipe(res);
+      stream.pipe(res);    
     })
     .catch((err) => {
       console.log(err);
@@ -48,6 +54,7 @@ io.sockets.on("connection", (socket) => {
     io.sockets.emit("update", {type: "connect", name: "SERVER", message: name + " 접속"});
     allUsers.push(socket.name);
     io.sockets.emit("userUpdate", allUsers);
+    socket.emit("streamInit", streamData);
   });
 
   socket.on("message", (data) => {
@@ -60,15 +67,14 @@ io.sockets.on("connection", (socket) => {
       var command = parts[0].substring(prefix.length, parts[0].length);
       var keyword = "";
 
-      if (command === "검색") {
-
-        for (var i = 1; i < parts.length; i++) {
-          keyword += parts[i];
-          if (i + 1 !== parts.length) {
-            keyword += " ";
-          }
+      for (var i = 1; i < parts.length; i++) {
+        keyword += parts[i];
+        if (i + 1 !== parts.length) {
+          keyword += " ";
         }
+      }
 
+      if (command === "검색") {
         if (!keyword) {
           io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 검색할 제목을 정확히 입력해주세요.`});
           return;
@@ -95,7 +101,10 @@ io.sockets.on("connection", (socket) => {
             io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 ID를 확인할 수 없습니다.`});
           }
           else {
-            var title = res.items[0].snippet.title;
+            title = res.items[0].snippet.title;
+            streamData.title = title;
+            streamData.streamStarted = new Date();
+            streamData.lastPlaying = parts[1];
             io.sockets.emit("update", {type:"server", name:"SERVER", message:`[♪] 재생 >> ${title}`});
             io.sockets.emit("playMusic", {videoId:parts[1], title:title});
           }

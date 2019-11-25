@@ -38,7 +38,7 @@ socket.on("update", (data) => {
   message.appendChild(text);
   chat.appendChild(message);
 
-  checkAndRemoveChat();
+  updateChat();
 });
 
 socket.on("userUpdate", (allUsers) => {
@@ -52,14 +52,36 @@ socket.on("userUpdate", (allUsers) => {
   });
 })
 
+socket.on("streamInit", (streamData) => {
+  try {
+    nowPlaying.innerText = streamData.title;
+    player.src = `/music/${streamData.lastPlaying}`;
+    player.volume = 0;
+    setTimeout(() => {
+      player.play();
+      player.currentTime = Math.abs(Date.parse(streamData.streamStarted) - new Date()) / 1000;
+    }, 10000);
+    player.volume = 0.1;
+    player.muted = false;
+  } catch {
+    return;
+  }
+});
+
 socket.on("playMusic", (data) => {
   player.setAttribute("src", `/music/${data.videoId}`);
   nowPlaying.innerText = data.title;
 });
 
 function send() {
-  if (!chatInput.value.length) {
+  chatInput.value = chatInput.value.trim();
+
+  if (inputIsBlank()) {
     return;
+  }
+
+  if (inputIsMultiline()) {
+    chatInput.value = "\n" + chatInput.value;
   }
   
   socket.emit("message", {type: "message", message: chatInput.value});
@@ -70,23 +92,55 @@ function send() {
   message.classList.add("client");
   message.appendChild(text);
   chat.appendChild(message);
-  
-  chatInput.value = "";
-
-  checkAndRemoveChat();
 }
 
-chatInput.addEventListener("keypress", (e) => {
+chatInput.addEventListener("keydown", (e) => {
   var key = e.which || e.keyCode;
-  if (key == 13) // 'Enter'
+
+  if (key == 13 && !e.shiftKey) {
     send();
+  }
+});
+
+chatInput.addEventListener("keyup", (e) => {
+  var key = e.which || e.keyCode;
+
+  if (key == 13 && !e.shiftKey) {
+    clearInput();
+    updateChat();
+  }
 });
 
 function checkAndRemoveChat() {
-  if (chat.childElementCount > 21) {
-    chat.removeChild(chat.childNodes[0]);
+  // if (chat.childElementCount > 21) {
+  //   chat.removeChild(chat.childNodes[0]);
+  // }
+}
+
+function inputIsBlank() {
+  return chatInput.value.trim().length === 0;
+}
+
+function clearInput() {
+  return chatInput.value = "";
+}
+
+function inputIsMultiline() {
+  try {
+    return chatInput.value.match(/\n/g).length > 0;
+  } catch (e) {
+    return null;
   }
+}
+
+function updateChat() {
+  checkAndRemoveChat();
+  chat.scrollTop = chat.scrollHeight;
 }
 
 player.controls = false;
 player.volume = 0.5;
+
+// setInterval(() => {
+//   console.log(player.currentTime);
+// }, 1000);
