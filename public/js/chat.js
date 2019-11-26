@@ -52,26 +52,54 @@ socket.on("userUpdate", (allUsers) => {
   });
 })
 
-socket.on("streamInit", (streamData) => {
-  try {
-    nowPlaying.innerText = streamData.title;
-    player.src = `/music/${streamData.lastPlaying}`;
-    player.volume = 0;
-    setTimeout(() => {
-      player.play();
-      player.currentTime = Math.abs(Date.parse(streamData.streamStarted) - new Date()) / 1000;
-    }, 10000);
-    player.volume = 0.1;
-    player.muted = false;
-  } catch {
+var playing = {
+  src: "",
+  title: "",
+  start: ""
+}
+
+socket.on("playMusic", (streamData) => {
+  if (!streamData)
     return;
+
+  playing.src = `/music/${streamData.lastPlaying}`;
+  playing.title = streamData.title;
+  playing.start = streamData.streamStarted;
+
+  player.src = playing.src;
+  player.load();
+});
+
+player.addEventListener('loadeddata', () => {
+  player.play();
+}, false);
+
+player.addEventListener("play", () => {
+  var playerPos = Math.abs(Date.parse(playing.start) - new Date()) / 1000;
+  nowPlaying.innerText = playing.title;
+  player.currentTime = playerPos;
+});
+
+player.addEventListener("playing", () => {
+  var playerPos = Math.abs(Date.parse(playing.start) - new Date()) / 1000;
+  if (playerPos > player.duration) {
+    resetPlayer();
   }
 });
 
-socket.on("playMusic", (data) => {
-  player.setAttribute("src", `/music/${data.videoId}`);
-  nowPlaying.innerText = data.title;
+// socket.on("playMusic", (data) => {
+//   player.setAttribute("src", `/music/${data.videoId}`);
+//   nowPlaying.innerText = data.title;
+// });
+
+player.addEventListener("ended", () => {
+  resetPlayer();
 });
+
+function resetPlayer() {
+  nowPlaying.innerText = "재생 중이 아닙니다.";
+  player.pause();
+}
 
 function send() {
   chatInput.value = chatInput.value.trim();
@@ -139,8 +167,9 @@ function updateChat() {
 }
 
 player.controls = false;
+player.muted = false;
 player.volume = 0.5;
 
-// setInterval(() => {
-//   console.log(player.currentTime);
-// }, 1000);
+setInterval(() => {
+  console.log(player.duration);
+}, 500);

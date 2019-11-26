@@ -34,7 +34,7 @@ app.get("/music/:videoId", (req, res) => {
     .then((stream) => {
       stream.emitter.on('error', (err) => {
         console.log(err);
-        io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 재생할 수 없는 영상입니다.`});
+        // io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 재생할 수 없는 영상입니다.`});
       });
       stream.pipe(res);    
     })
@@ -54,7 +54,8 @@ io.sockets.on("connection", (socket) => {
     io.sockets.emit("update", {type: "connect", name: "SERVER", message: name + " 접속"});
     allUsers.push(socket.name);
     io.sockets.emit("userUpdate", allUsers);
-    socket.emit("streamInit", streamData);
+    console.log(streamData);
+    socket.emit("playMusic", streamData);
   });
 
   socket.on("message", (data) => {
@@ -95,7 +96,7 @@ io.sockets.on("connection", (socket) => {
         youtube.getById(parts[1], (err, res) => {
           if (err) {
             console.log(err);
-            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 오류가 발생했습니다.`});
+            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 API에서 오류가 발생했습니다.`});
           }
           else if (res.items.length === 0) {
             io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 ID를 확인할 수 없습니다.`});
@@ -106,7 +107,7 @@ io.sockets.on("connection", (socket) => {
             streamData.streamStarted = new Date();
             streamData.lastPlaying = parts[1];
             io.sockets.emit("update", {type:"server", name:"SERVER", message:`[♪] 재생 >> ${title}`});
-            io.sockets.emit("playMusic", {videoId:parts[1], title:title});
+            io.sockets.emit("playMusic", streamData);
           }
         });
       }
