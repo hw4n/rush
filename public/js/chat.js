@@ -4,10 +4,12 @@ var chatInput = document.querySelector("#chatInput");
 var userlist = document.querySelector("#userlist");
 var player = document.querySelector("#streamPlayer");
 var nowPlaying = document.querySelector("#nowPlaying");
+var volumeControl = document.querySelector("#volumeControl");
 
 socket.on("connect", () => {
   var name = Math.random().toString(36).substr(2, 7);
   socket.emit("newUser", name);
+  resetPlayer();
 });
 
 socket.on("update", (data) => {
@@ -62,9 +64,9 @@ socket.on("playMusic", (streamData) => {
   if (!streamData)
     return;
 
-  playing.src = `/music/${streamData.lastPlaying}`;
+  playing.src = `/music/${streamData.src}`;
   playing.title = streamData.title;
-  playing.start = streamData.streamStarted;
+  playing.start = streamData.start;
 
   player.src = playing.src;
   player.load();
@@ -87,6 +89,13 @@ player.addEventListener("playing", () => {
   }
 });
 
+socket.on("unplayable", () => {
+  nowPlaying.innerText = "재생할 수 없는 영상입니다.";
+  setTimeout(() => {
+    resetPlayer();
+  }, 3000);
+});
+
 // socket.on("playMusic", (data) => {
 //   player.setAttribute("src", `/music/${data.videoId}`);
 //   nowPlaying.innerText = data.title;
@@ -98,6 +107,7 @@ player.addEventListener("ended", () => {
 
 function resetPlayer() {
   nowPlaying.innerText = "재생 중이 아닙니다.";
+  player.src = "";
   player.pause();
 }
 
@@ -170,6 +180,10 @@ player.controls = false;
 player.muted = false;
 player.volume = 0.5;
 
-setInterval(() => {
-  console.log(player.duration);
-}, 500);
+volumeControl.oninput = () => {
+  player.volume = Number(volumeControl.value) / 100;
+}
+
+// setInterval(() => {
+//   console.log(player.duration);
+// }, 500);

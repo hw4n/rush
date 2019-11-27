@@ -22,8 +22,8 @@ app.get("/chat", (req, res) => {
 });
 
 var streamData = {
-  streamStarted: "",
-  lastPlaying: "",
+  start: "",
+  src: "",
   title: ""
 };
 
@@ -33,8 +33,9 @@ app.get("/music/:videoId", (req, res) => {
   streamPromise
     .then((stream) => {
       stream.emitter.on('error', (err) => {
-        console.log(err);
-        // io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 재생할 수 없는 영상입니다.`});
+        // console.log(err);
+        streamData.src = "";
+        io.sockets.emit("unplayable");
       });
       stream.pipe(res);    
     })
@@ -46,22 +47,34 @@ app.get("/music/:videoId", (req, res) => {
 
 var allUsers = [];
 var prefix = "!";
+var messages = [];
 
 io.sockets.on("connection", (socket) => {
   socket.on("newUser", (name) => {
     console.log(`[+] User(${name}) connected`);
     socket.name = name;
+
+    if (messages.length > 30) {
+      messages.shift();
+    }
+    messages.forEach((data) => {
+      socket.emit("update", data);
+    });
+
     io.sockets.emit("update", {type: "connect", name: "SERVER", message: name + " 접속"});
     allUsers.push(socket.name);
     io.sockets.emit("userUpdate", allUsers);
-    console.log(streamData);
-    socket.emit("playMusic", streamData);
+
+    if (streamData.src) {
+      socket.emit("playMusic", streamData);
+    }
   });
 
   socket.on("message", (data) => {
     data.name = socket.name;
     console.log(`[+] User(${data.name}) sent msg: ${data.message}`);
     socket.broadcast.emit("update", data);
+    messages.push(data);
 
     if (data.message.substring(0, prefix.length) === prefix) {
       var parts = data.message.split(" ");
@@ -77,36 +90,35 @@ io.sockets.on("connection", (socket) => {
 
       if (command === "검색") {
         if (!keyword) {
-          io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 검색할 제목을 정확히 입력해주세요.`});
+          socket.emit("update", {type:"server", name:"SERVER", message:`[!] 검색할 제목을 정확히 입력해주세요.`});
           return;
         }
   
         youtube.search(keyword, 5, (err, res) => {
           res.items.forEach((video, idx) => {
-            io.sockets.emit("update", {type:"server", name:"SERVER", message:`${video.id.videoId} >> ${video.snippet.title}`});
+            socket.emit("update", {type:"server", name:"SERVER", message:`[${video.id.videoId}] ${video.snippet.title}`});
           });
         });
       }
       else if (command === "재생") {
         if (!keyword) {
-          io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 정확한 비디오ID를 입력해주세요.`});
+          socket.emit("update", {type:"server", name:"SERVER", message:`[!] 정확한 비디오ID를 입력해주세요.`});
           return;
         }
 
         youtube.getById(parts[1], (err, res) => {
           if (err) {
             console.log(err);
-            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 API에서 오류가 발생했습니다.`});
+            socket.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 API에서 오류가 발생했습니다.`});
           }
           else if (res.items.length === 0) {
-            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 ID를 확인할 수 없습니다.`});
+            socket.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 ID를 확인할 수 없습니다.`});
           }
           else {
-            title = res.items[0].snippet.title;
-            streamData.title = title;
-            streamData.streamStarted = new Date();
-            streamData.lastPlaying = parts[1];
-            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[♪] 재생 >> ${title}`});
+            streamData.title = res.items[0].snippet.title;
+            streamData.start = new Date();
+            streamData.src = parts[1];
+            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[♪] 재생 >> ${streamData.title}`});
             io.sockets.emit("playMusic", streamData);
           }
         });
