@@ -14,6 +14,7 @@ socket.on("connect", () => {
 
 socket.on("update", (data) => {
   var message = document.createElement("div");
+  var time = dateToTimestamp(data.timestamp);
   var text;
   if (data.name !== "SERVER")
     text = document.createTextNode(`${data.name} : ${data.message}\n`);
@@ -35,6 +36,12 @@ socket.on("update", (data) => {
       msgClass = ["system", "disconnect"];
       break;
   }
+  
+  var timestamp = document.createElement("span");
+  var timetext = document.createTextNode(time);
+  timestamp.classList.add("timestamp");
+  timestamp.appendChild(timetext);
+  message.appendChild(timestamp);
 
   message.classList.add(...msgClass);
   message.appendChild(text);
@@ -127,6 +134,13 @@ function send() {
   var message = document.createElement("div");
   var text = document.createTextNode("당신 : " + chatInput.value);
 
+  var time = dateToTimestamp(String(new Date()));
+  var timestamp = document.createElement("span");
+  var timetext = document.createTextNode(time);
+  timestamp.classList.add("timestamp");
+  timestamp.appendChild(timetext);
+  message.appendChild(timestamp);
+
   message.classList.add("client");
   message.appendChild(text);
   chat.appendChild(message);
@@ -187,3 +201,23 @@ volumeControl.oninput = () => {
 // setInterval(() => {
 //   console.log(player.duration);
 // }, 500);
+
+function dateToTimestamp(time) {
+  var date = new Date(time);
+  var hour = date.getHours();
+  var minute = date.getMinutes();
+  var ampm = "AM";
+
+  if (hour > 12) {
+    ampm = "PM";
+    hour -= 12;
+  }
+  if (hour < 10) {
+    hour = "0" + hour;
+  }
+  if (minute < 10) {
+    minute = "0" + minute;
+  }
+
+  return `${hour}:${minute} ${ampm}`;
+}

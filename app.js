@@ -61,7 +61,7 @@ io.sockets.on("connection", (socket) => {
       socket.emit("update", data);
     });
 
-    io.sockets.emit("update", {type: "connect", name: "SERVER", message: name + " 접속"});
+    io.sockets.emit("update", {type: "connect", name: "SERVER", message: `${name} 접속`, timestamp:new Date()});
     allUsers.push(socket.name);
     io.sockets.emit("userUpdate", allUsers);
 
@@ -72,6 +72,7 @@ io.sockets.on("connection", (socket) => {
 
   socket.on("message", (data) => {
     data.name = socket.name;
+    data.timestamp = new Date();
     console.log(`[+] User(${data.name}) sent msg: ${data.message}`);
     socket.broadcast.emit("update", data);
     messages.push(data);
@@ -96,7 +97,7 @@ io.sockets.on("connection", (socket) => {
   
         youtube.search(keyword, 5, (err, res) => {
           res.items.forEach((video, idx) => {
-            socket.emit("update", {type:"server", name:"SERVER", message:`[${video.id.videoId}] ${video.snippet.title}`});
+            socket.emit("update", {type:"server", name:"SERVER", message:`[${video.id.videoId}] ${video.snippet.title}`, timestamp:new Date()});
           });
         });
       }
@@ -118,7 +119,7 @@ io.sockets.on("connection", (socket) => {
             streamData.title = res.items[0].snippet.title;
             streamData.start = new Date();
             streamData.src = parts[1];
-            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[♪] 재생 >> ${streamData.title}`});
+            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[♪] 재생 >> ${streamData.title}`, timestamp:new Date()});
             io.sockets.emit("playMusic", streamData);
           }
         });
@@ -128,7 +129,7 @@ io.sockets.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log(`[-] User(${socket.name}) disconnected`);
-    socket.broadcast.emit("update", {type: "disconnect", name: "SERVER", message: socket.name + " 접속 종료"});
+    socket.broadcast.emit("update", {type: "disconnect", name: "SERVER", message: `${socket.name} 접속 종료`, timestamp:new Date()});
     var userIdx = allUsers.indexOf(socket.name);
     allUsers.splice(userIdx, 1);
     io.sockets.emit("userUpdate", allUsers);

@@ -69,6 +69,13 @@ ul {
   overflow-x: hidden;
 }
 
+.timestamp {
+  float: right;
+  padding-right: 5px;
+  color: rgb(100, 100, 100);
+  font-style: italic;
+}
+
 .system {
   text-align: center;
   font-style: italic;
