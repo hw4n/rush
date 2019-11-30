@@ -37,11 +37,11 @@ app.get("/music/:videoId", (req, res) => {
         streamData.src = "";
         io.sockets.emit("unplayable");
       });
-      stream.pipe(res);    
+      stream.pipe(res);
     })
     .catch((err) => {
       console.log(err);
-      io.sockets.emit("update", {type:"server", name:"SERVER", message:`[!] 오류가 발생했습니다.`});
+      io.sockets.emit("update", new ServerMessage("[!] 오류가 발생했습니다."));
   });
 });
 
@@ -61,7 +61,7 @@ io.sockets.on("connection", (socket) => {
       socket.emit("update", data);
     });
 
-    io.sockets.emit("update", {type: "connect", name: "SERVER", message: `${name} 접속`, timestamp:new Date()});
+    io.sockets.emit("update", new Message("connect", "server", `${name} 접속`));
     allUsers.push(socket.name);
     io.sockets.emit("userUpdate", allUsers);
 
@@ -73,63 +73,52 @@ io.sockets.on("connection", (socket) => {
   socket.on("message", (data) => {
     data.name = socket.name;
     data.timestamp = new Date();
-    console.log(`[+] User(${data.name}) sent msg: ${data.message}`);
     socket.broadcast.emit("update", data);
+    console.log(`[+] User(${data.name}) sent msg: ${data.message}`);
     messages.push(data);
 
-    if (data.message.substring(0, prefix.length) === prefix) {
-      var parts = data.message.split(" ");
-      var command = parts[0].substring(prefix.length, parts[0].length);
-      var keyword = "";
+    command = commandParse(data);
 
-      for (var i = 1; i < parts.length; i++) {
-        keyword += parts[i];
-        if (i + 1 !== parts.length) {
-          keyword += " ";
-        }
-      }
+    if (!command) {
+      return;
+    }
 
-      if (command === "검색") {
-        if (!keyword) {
-          socket.emit("update", {type:"server", name:"SERVER", message:`[!] 검색할 제목을 정확히 입력해주세요.`});
-          return;
-        }
-  
-        youtube.search(keyword, 5, (err, res) => {
+    if (!command.param) {
+      socket.emit("update", new ServerMessage("명령어 매개변수가 입력되지 않았습니다."));
+    }
+
+    switch (command.work) {
+      case "검색":
+        youtube.search(command.param, 5, (err, res) => {
           res.items.forEach((video, idx) => {
-            socket.emit("update", {type:"server", name:"SERVER", message:`[${video.id.videoId}] ${video.snippet.title}`, timestamp:new Date()});
+            socket.emit("update", new ServerMessage(`[${video.id.videoId}] ${video.snippet.title}`));
           });
         });
-      }
-      else if (command === "재생") {
-        if (!keyword) {
-          socket.emit("update", {type:"server", name:"SERVER", message:`[!] 정확한 비디오ID를 입력해주세요.`});
-          return;
-        }
-
-        youtube.getById(parts[1], (err, res) => {
+        break;
+      case "재생":
+        youtube.getById(command.param, (err, res) => {
           if (err) {
             console.log(err);
-            socket.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 API에서 오류가 발생했습니다.`});
+            socket.emit("update", new ServerMessage("[!] 유튜브 API에서 오류가 발생했습니다."));
           }
           else if (res.items.length === 0) {
-            socket.emit("update", {type:"server", name:"SERVER", message:`[!] 유튜브 ID를 확인할 수 없습니다.`});
+            socket.emit("update", new ServerMessage("[!] 유튜브 ID를 확인할 수 없습니다."));
           }
           else {
             streamData.title = res.items[0].snippet.title;
             streamData.start = new Date();
-            streamData.src = parts[1];
-            io.sockets.emit("update", {type:"server", name:"SERVER", message:`[♪] 재생 >> ${streamData.title}`, timestamp:new Date()});
+            streamData.src = command.param;
+            io.sockets.emit("update", new Message("server", "server", `[♪] 재생 >> ${streamData.title}`));
             io.sockets.emit("playMusic", streamData);
           }
         });
-      }
+        break;
     }
   });
 
   socket.on("disconnect", () => {
     console.log(`[-] User(${socket.name}) disconnected`);
-    socket.broadcast.emit("update", {type: "disconnect", name: "SERVER", message: `${socket.name} 접속 종료`, timestamp:new Date()});
+    socket.broadcast.emit("update", new Message("disconnect", "server", `${socket.name} 접속 종료`));
     var userIdx = allUsers.indexOf(socket.name);
     allUsers.splice(userIdx, 1);
     io.sockets.emit("userUpdate", allUsers);
@@ -139,3 +128,33 @@ io.sockets.on("connection", (socket) => {
 server.listen(port, () => {
   console.log(`[+] Server listening at ${port}`);
 });
+
+function Message(type, name, message) {
+  this.type = type;
+  this.name = name;
+  this.message = message;
+  this.timestamp = new Date();
+}
+
+function ServerMessage(message) {
+  return new Message("server", "server", message);
+}
+
+function commandParse(data) {
+  if (data.message.substring(0, prefix.length) === prefix) {
+    var parts = data.message.split(" ");
+    var work = parts[0].substring(prefix.length, parts[0].length);
+    var param = "";
+
+    for (var i = 1; i < parts.length; i++) {
+      param += parts[i];
+      if (i + 1 !== parts.length) {
+        param += " ";
+      }
+    }
+
+    return {work, param};
+  } else {
+    return null;
+  }
+}

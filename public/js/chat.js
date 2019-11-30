@@ -106,7 +106,7 @@ function send() {
 function updateChat(data) {
   var message = document.createElement("div");
 
-  if (data.name !== "SERVER") {
+  if (data.name !== "server") {
     var text = document.createTextNode(`${data.name} : ${data.message}\n`);
   } else {
     var text = document.createTextNode(`${data.message}\n`);
