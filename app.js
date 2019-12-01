@@ -48,6 +48,7 @@ app.get("/music/:videoId", (req, res) => {
 var allUsers = [];
 var prefix = "!";
 var messages = [];
+var musicQueue = [];
 
 io.sockets.on("connection", (socket) => {
   socket.on("newUser", (name) => {
@@ -65,8 +66,9 @@ io.sockets.on("connection", (socket) => {
     allUsers.push(socket.name);
     io.sockets.emit("userUpdate", allUsers);
 
-    if (streamData.src) {
-      socket.emit("playMusic", streamData);
+    if (musicQueue.length > 0) {
+      socket.emit("updateQueue", musicQueue);
+      socket.emit("playMusic", musicQueue[0]);
     }
   });
 
@@ -85,14 +87,20 @@ io.sockets.on("connection", (socket) => {
 
     if (!command.param) {
       socket.emit("update", new ServerMessage("명령어 매개변수가 입력되지 않았습니다."));
+      return;
     }
 
     switch (command.work) {
       case "검색":
         youtube.search(command.param, 5, (err, res) => {
-          res.items.forEach((video, idx) => {
-            socket.emit("update", new ServerMessage(`[${video.id.videoId}] ${video.snippet.title}`));
-          });
+          if (err) {
+            console.log(err);
+            socket.emit("update", new ServerMessage("[!] 유튜브 API에서 오류가 발생했습니다."));
+          } else {
+            res.items.forEach((video, idx) => {
+              socket.emit("update", new ServerMessage(`[${video.id.videoId}] ${video.snippet.title}`));
+            });
+          }
         });
         break;
       case "재생":
@@ -105,11 +113,11 @@ io.sockets.on("connection", (socket) => {
             socket.emit("update", new ServerMessage("[!] 유튜브 ID를 확인할 수 없습니다."));
           }
           else {
-            streamData.title = res.items[0].snippet.title;
-            streamData.start = new Date();
-            streamData.src = command.param;
-            io.sockets.emit("update", new Message("server", "server", `[♪] 재생 >> ${streamData.title}`));
-            io.sockets.emit("playMusic", streamData);
+            title = res.items[0].snippet.title;
+            musicQueue.push(new Music(title, command.param));
+
+            io.sockets.emit("updateQueue", musicQueue);
+            io.sockets.emit("update", new Message("server", "server", `[♪] 대기열에 추가 >> ${title}`));
           }
         });
         break;
@@ -123,7 +131,27 @@ io.sockets.on("connection", (socket) => {
     allUsers.splice(userIdx, 1);
     io.sockets.emit("userUpdate", allUsers);
   });
+
+  socket.on("musicDone", (doneMusicTitle) => {
+    if (musicQueue[0].src === doneMusicTitle) {
+      musicQueue.shift();
+      if (musicQueue.length > 0) {
+        musicQueue[0].start = new Date();
+        io.sockets.emit("updateQueue", musicQueue);
+        io.sockets.emit("playMusic", musicQueue[0]);
+        io.sockets.emit("update", new Message("server", "server", `[♪] 재생 >> ${musicQueue[0].title}`));
+      }
+    }
+
+    console.log(musicQueue);
+  });
 });
+
+function Music(title, src) {
+  this.title = title;
+  this.src = src;
+  this.start = new Date();
+}
 
 server.listen(port, () => {
   console.log(`[+] Server listening at ${port}`);

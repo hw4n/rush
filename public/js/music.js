@@ -1,6 +1,7 @@
 var player = document.querySelector("#streamPlayer");
 var nowPlaying = document.querySelector("#nowPlaying");
 var volumeControl = document.querySelector("#volumeControl");
+var musicQueueList = document.querySelector("#musicQueue");
 
 var playing = {
   src: "",
@@ -8,14 +9,34 @@ var playing = {
   start: ""
 }
 
-socket.on("playMusic", (streamData) => {
-  if (!streamData) {
+socket.on("playMusic", (music) => {
+  setStreamData(music);
+  player.load();
+});
+
+socket.on("updateQueue", (musics) => {
+  if (!musics) {
     return;
   }
 
-  setStreamData(streamData);
-  player.load();
+  if (!player.nowPlaying) {
+    setStreamData(musics[0]);
+    player.load();
+  }
+
+  updateQueue(musics);
 });
+
+function updateQueue(queue) {
+  musicQueueList.innerHTML = "";
+
+  for (var i = 1; i < queue.length; i++) {
+    var li = document.createElement("li");
+    var text = document.createTextNode(queue[i].title);
+    li.appendChild(text);
+    musicQueueList.appendChild(li);
+  };
+}
 
 player.addEventListener('loadeddata', () => {
   player.play();
@@ -27,21 +48,31 @@ player.addEventListener("play", () => {
 });
 
 player.addEventListener("playing", () => {
-  if (getCurrentSeekPos() > player.duration) {
+  if (musicIsOver()) {
     resetPlayer();
+  } else {
+    player.nowPlaying = true;
   }
 });
 
 socket.on("unplayable", () => {
   nowPlaying.innerText = "재생할 수 없는 영상입니다.";
-  setTimeout(() => {
-    resetPlayer();
-  }, 3000);
+  socket.emit("musicDone", playing.src.substring(7,));
 });
 
 player.addEventListener("ended", () => {
+  socket.emit("musicDone", playing.src.substring(7,));
+
   resetPlayer();
 });
+
+function musicIsOver() {
+  if (getCurrentSeekPos() > player.duration) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 function setStreamData(streamData) {
   playing.src = `/music/${streamData.src}`;
@@ -59,6 +90,7 @@ function resetPlayer() {
   nowPlaying.innerText = "재생 중이 아닙니다.";
   player.src = "";
   player.pause();
+  player.nowPlaying = false;
 }
 
 function playerInit() {
