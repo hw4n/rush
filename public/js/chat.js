@@ -116,9 +116,20 @@ function updateChat(data) {
 
   message.classList.add(...chatClasses(data.type));
   message.appendChild(text);
+  
   chat.appendChild(message);
 
   chat.scrollTop = chat.scrollHeight;
+
+  if (data.name == "server") {
+    setTimeout(() => {
+      message.classList.remove("connect");
+      message.classList.remove("disconnect");
+    }, 5000);
+    setTimeout(() => {
+      message.remove();
+    }, 6000);
+  }
 }
 
 function dateToTimestamp(time) {
@@ -155,3 +166,29 @@ function createTimestampElement(time) {
   
   return timestamp;
 }
+
+window.onbeforeunload = function(event) {
+  this.socket.disconnect();
+};
+
+function clearChat() {
+  chat.innerHTML = "";
+}
+
+socket.on("disconnect", () => {
+  chatInput.toggleAttribute("disabled");
+    var div = document.createElement("div");
+    div.innerHTML = `
+      <div class="overlay-content">
+        <h1>연결되지 않음</h1>
+        <p>서버에 연결된 상태가 아닙니다.</p>
+        <button type="button" class="btn btn-lg btn-success" onclick="
+          socket.connect();
+          clearChat();
+          chatInput.toggleAttribute('disabled');
+        ">재접속</button>
+      </div>
+    `;
+    div.classList.add("overlay", "disconnect");
+    chat.prepend(div);
+});
