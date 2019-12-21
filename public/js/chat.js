@@ -125,10 +125,10 @@ function updateChat(data) {
     setTimeout(() => {
       message.classList.remove("connect");
       message.classList.remove("disconnect");
-    }, 5000);
+    }, 30000);
     setTimeout(() => {
       message.remove();
-    }, 6000);
+    }, 31000);
   }
 }
 
