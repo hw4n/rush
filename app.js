@@ -2,11 +2,8 @@ var express = require("express"),
     app     = express(),
     server  = require("http").createServer(app),
     io      = require("socket.io").listen(server);
-    youtubeAudioStream = require('@isolution/youtube-audio-stream'),
-    Youtube = require('youtube-node'),
-    youtube = new Youtube();
+    youtubeAudioStream = require('@isolution/youtube-audio-stream');
 
-youtube.setKey(process.env.APIKEY);
 const port = process.env.PORT || 8080;
 
 app.set("view engine", "ejs");
@@ -88,39 +85,6 @@ io.sockets.on("connection", (socket) => {
     if (!command.param) {
       socket.emit("update", new ServerMessage("명령어 매개변수가 입력되지 않았습니다."));
       return;
-    }
-
-    switch (command.work) {
-      case "검색":
-        youtube.search(command.param, 5, (err, res) => {
-          if (err) {
-            console.log(err);
-            socket.emit("update", new ServerMessage("[!] 유튜브 API에서 오류가 발생했습니다."));
-          } else {
-            res.items.forEach((video, idx) => {
-              socket.emit("update", new ServerMessage(`[${video.id.videoId}] ${video.snippet.title}`));
-            });
-          }
-        });
-        break;
-      case "재생":
-        youtube.getById(command.param, (err, res) => {
-          if (err) {
-            console.log(err);
-            socket.emit("update", new ServerMessage("[!] 유튜브 API에서 오류가 발생했습니다."));
-          }
-          else if (res.items.length === 0) {
-            socket.emit("update", new ServerMessage("[!] 유튜브 ID를 확인할 수 없습니다."));
-          }
-          else {
-            title = res.items[0].snippet.title;
-            musicQueue.push(new Music(title, command.param));
-
-            io.sockets.emit("updateQueue", musicQueue);
-            io.sockets.emit("update", new Message("server", "server", `[♪] 대기열에 추가 >> ${title}`));
-          }
-        });
-        break;
     }
   });
 
