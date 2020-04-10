@@ -1,0 +1,25 @@
+{
+  "name": "rush",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hw4n/rush.git"
+  },
+  "author": "TEAM RUSH",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hw4n/rush/issues"
+  },
+  "homepage": "https://github.com/hw4n/rush#readme",
+  "dependencies": {
+    "@isolution/youtube-audio-stream": "^1.3.0",
+    "ejs": "^2.7.3",
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}
