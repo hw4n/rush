@@ -54,8 +54,23 @@
   font-family: 'Nanum Gothic', sans-serif;
 }
 
-#mainRow {
-  height: calc(100vh - 6rem);
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+.main {
+  display: flex;
+}
+
+.main section {
+  width: 20%;
+  padding: 10px;
+  border-right: 1px solid #ced4da;
+}
+
+.main aside {
+  width: 80%;
 }
 
 ul {

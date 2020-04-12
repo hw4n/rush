@@ -3,10 +3,10 @@ import React from 'react';
 function Chat() {
   return (
     <>
-      <div className="px-0 border col-md-9">
+      <aside>
         <div id="chat">
         </div>
-      </div>
+      </aside>
       <textarea className="fixed-bottom form-control" id="chatInput" placeholder="메시지를 입력하세요!"></textarea>
     </>
   );
